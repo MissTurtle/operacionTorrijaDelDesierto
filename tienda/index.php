@@ -54,13 +54,8 @@ try {
                     $stmtArticulos->bindParam(':idSubcategoria', $idSubcategoria, PDO::PARAM_INT);
                     $stmtArticulos->execute();
                     $articulos = array_merge($articulos, $stmtArticulos->fetchAll(PDO::FETCH_ASSOC));
-        if (empty($articulos)) {
-            echo '<table class="table table-responsive table-bordered table-striped align-middle text-center">';
-            echo '<tr><td colspan="7"><p>No hay articulos de esta categoria</p></td></tr>';
-            echo '</table>';
-        }
-    }
-}
+                }
+            }
             // Si no hay búsqueda ni subcategoría seleccionada, mostrar todos los artículos
             if (empty($articulos)) {
                 $queryTodosArticulos = "SELECT * FROM articulos WHERE activo = 1 ORDER BY $ordenarPor $orden LIMIT :inicio, :PAGS";
@@ -78,81 +73,74 @@ try {
 ?>
 
 <main class="container">
-    <h2>Selecciona tus artículos</h2>
-    <div class="container-fluid">
-        <div class="float-end">
-        <a class="nav-link text-white" href="VerCarta.php">
-        <img src="imgs/carrito.png" alt="Carrito" width="50" height="50">
-        <?php
-        // Obtener la cantidad de artículos en el carrito
-        $cartItemCount = ($cart->total_items() > 0) ? $cart->total_items() : 0;
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2>Selecciona tus artículos</h2>
+        <div>
+            <a class="nav-link text-white d-flex align-items-center" href="VerCarta.php">
+                <img src="imgs/carrito.png" alt="Carrito" width="50" height="50">
+                <?php
+                // Obtener la cantidad de artículos en el carrito
+                $cartItemCount = ($cart->total_items() > 0) ? $cart->total_items() : 0;
 
-        // Obtener el precio total de los artículos en el carrito
-        $totalPrice = ($cart->total() > 0) ? '€' . number_format($cart->total(), 2) : '€0.00';
+                // Obtener el precio total de los artículos en el carrito
+                $totalPrice = ($cart->total() > 0) ? '€' . number_format($cart->total(), 2) : '€0.00';
 
-        // Mostrar la cantidad de artículos en el carrito
-        echo '<span class="badge bg-success">' . $cartItemCount . '</span>';
+                // Mostrar la cantidad de artículos en el carrito
+                echo '<span class="badge bg-success ms-2">' . $cartItemCount . '</span>';
 
-        // Mostrar el precio total al lado del carrito
-        echo '<span class="badge bg-success">' . $totalPrice . '</span>';
-        ?>
-    </a>
+                // Mostrar el precio total al lado del carrito
+                echo '<span class="badge bg-success ms-2">' . $totalPrice . '</span>';
+                ?>
+            </a>
         </div>
     </div>
-    <table class="table table-responsive table-bordered table-striped align-middle text-center">
+
+    <div class="row">
     <?php
-
-    // Imprime la tabla
+    // Imprime las tarjetas
     if (!empty($articulos)) {
-        echo '<table class="table table-responsive table-bordered table-striped align-middle text-center">';
-        echo '<caption class="caption-bot">Tabla de compras</caption>';
-        echo '<thead class="table-dark">';
-        echo '<tr>';
-        echo '<th scope="col">Codigo</th>';
-        echo '<th scope="col">Nombre</th>';
-        echo '<th scope="col">Descripcion</th>';
-        echo '<th scope="col">Categoria</th>';
-        echo '<th scope="col">Precio</th>';
-        echo '<th scope="col">Imagen</th>';
-        echo '<th scope="col">Comprar</th>';
-        echo '</tr>';
-        echo '</thead>';
-
         foreach ($articulos as $fila) {
-            echo '<tr>';
-            echo '<td>' . $fila['codigo'] . '</td>';
-            echo '<td>' . $fila['nombre'] . '</td>';
-            echo '<td>' . $fila['descripcion'] . '</td>';
-            echo '<td>' . $fila['categoria'] . '</td>';
-            echo '<td>' . $fila['precio'] . '</td>';
-            echo '<td><img src="' . $fila['imagen'] . '" alt="Imagen" style="max-width: 100px; max-height: 100px;"></td>';
-            echo '<td><a class="btn btn-success" href="AccionCarta.php?action=addToCart&id=' . $fila['codigo'] . '">Al carrito</a></td>';
-            echo '</tr>';
+            echo '<div class="col-md-3 mb-4">';
+            echo '<div class="card h-100">';
+            echo '<img src="' . $fila['imagen'] . '" class="card-img-top" alt="Imagen del artículo" style="max-height: 200px;">';
+            echo '<div class="card-body">';
+            echo '<h5 class="card-title">' . $fila['nombre'] . '</h5>';
+            echo '<p class="card-text">' . $fila['descripcion'] . '</p>';
+            echo '</div>';
+            echo '<div class="card-footer d-flex justify-content-between align-items-center">';
+            echo '<p class="card-text mt-3">Precio: €' . $fila['precio'] . '</p>';
+            echo '<a class="btn btn-success" href="AccionCarta.php?action=addToCart&id=' . $fila['codigo'] . '">';
+            echo '<img src="imgs/carrito.png" alt="Añadir al carrito" width="25" height="25">';
+            echo '</a>';
+            echo '</div>';
+            echo '</div>';
+            echo '</div>';
         }
-    echo '</table>';
-} else {
-    echo '<table class="table table-responsive table-bordered table-striped align-middle text-center">';
-    echo '<tr><td colspan="7"><p>Articulo no encontrado</p></td></tr>';
-    echo '</table>';
-}
+    } else {
+        echo '<p class="text-center">Artículo no encontrado</p>';
+    }
+    ?>
 
-        // Separador para cada enlace de paginación
-        $sqlTotalArticulos = "SELECT COUNT(*) FROM articulos";
-        $stmtTotalArticulos = $con->prepare($sqlTotalArticulos);
-        $stmtTotalArticulos->execute();
+    </div>
 
-        $totalArticulos = $stmtTotalArticulos->fetchColumn();
-        $totalPaginas = ceil($totalArticulos / $PAGS);
-        ?>
-        <ul class="pagination">
-            <?php for ($i = 1; $i <= $totalPaginas; $i++) : ?>
-                <li class="page-item">
-                    <a class="page-link text-success" href="?pagina=<?= $i ?>"><?= $i ?></a>
-                </li>
-            <?php endfor; ?>
-        </ul>
-    <a href="?orden=asc" class="text-decoration-none text-success ' . ($orden == 'asc' ? 'selected' : '') . '">Nombre Asc | </a>
-    <a href="?orden=desc" class="text-decoration-none text-success ' . ($orden == 'desc' ? 'selected' : '') . '">Nombre Desc</a><br><br>
+    <?php
+    // Separador para cada enlace de paginación
+    $sqlTotalArticulos = "SELECT COUNT(*) FROM articulos";
+    $stmtTotalArticulos = $con->prepare($sqlTotalArticulos);
+    $stmtTotalArticulos->execute();
+
+    $totalArticulos = $stmtTotalArticulos->fetchColumn();
+    $totalPaginas = ceil($totalArticulos / $PAGS);
+    ?>
+    <ul class="pagination">
+        <?php for ($i = 1; $i <= $totalPaginas; $i++) : ?>
+            <li class="page-item">
+                <a class="page-link text-success" href="?pagina=<?= $i ?>"><?= $i ?></a>
+            </li>
+        <?php endfor; ?>
+    </ul>
+    <a href="?orden=asc" class="text-decoration-none text-success <?= ($orden == 'asc' ? 'selected' : '') ?>">Nombre Asc | </a>
+    <a href="?orden=desc" class="text-decoration-none text-success <?= ($orden == 'desc' ? 'selected' : '') ?>">Nombre Desc</a><br><br>
 
 </main>
 
